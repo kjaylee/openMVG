@@ -93,24 +93,21 @@ bool SequentialSfMReconstructionEngine::Process() {
     return false;
 
   // Initial pair choice
-  Pair initialPairIndex = _initialpair;
   if (_initialpair == Pair(0,0))
   {
-    Pair putative_initial_pair;
-    if (AutomaticInitialPairChoice(putative_initial_pair))
+    if (!AutomaticInitialPairChoice(_initialpair))
     {
-      initialPairIndex = _initialpair = putative_initial_pair;
-    }
-    else // Cannot find a valid initial pair, try to set it by hand?
-    {
+      // Cannot find a valid initial pair, try to set it by hand?
       if (!ChooseInitialPair(_initialpair))
+      {
         return false;
+      }
     }
   }
   // Else a starting pair was already initialized before
 
   // Initial pair Essential Matrix and [R|t] estimation.
-  if (!MakeInitialPair3D(initialPairIndex))
+  if (!MakeInitialPair3D(_initialpair))
     return false;
 
   // Compute robust Resection of remaining images
@@ -199,12 +196,12 @@ bool SequentialSfMReconstructionEngine::ChooseInitialPair(Pair & initialPairInde
 {
   if (_initialpair != Pair(0,0))
   {
+    // Internal initial pair is already initialized (so return it)
     initialPairIndex = _initialpair;
   }
   else
   {
-
-    // List Views that support valid intrinsic
+    // List Views that supports valid intrinsic
     std::set<IndexT> valid_views;
     for (Views::const_iterator it = _sfm_data.GetViews().begin();
       it != _sfm_data.GetViews().end(); ++it)
@@ -427,6 +424,7 @@ bool SequentialSfMReconstructionEngine::AutomaticInitialPairChoice(Pair & initia
         {
           // Triangulate inliers & compute angle between bearing vectors
           std::vector<float> vec_angles;
+          vec_angles.reserve(relativePose_info.vec_inliers.size());
           const Pose3 pose_I = Pose3(Mat3::Identity(), Vec3::Zero());
           const Pose3 pose_J = relativePose_info.relativePose;
           const Mat34 PI = cam_I->get_projective_equivalent(pose_I);
@@ -1009,6 +1007,11 @@ bool SequentialSfMReconstructionEngine::Resection(const size_t viewIndex)
         case PINHOLE_CAMERA_BROWN:
           optional_intrinsic =
             std::make_shared<Pinhole_Intrinsic_Brown_T2>
+            (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
+        break;
+        case PINHOLE_CAMERA_FISHEYE:
+            optional_intrinsic =
+                std::make_shared<Pinhole_Intrinsic_Fisheye>
             (view_I->ui_width, view_I->ui_height, focal, principal_point(0), principal_point(1));
         break;
         default:
