@@ -1,0 +1,29 @@
+version: 1.0.{build}
+
+# branches to build
+branches:
+  # whitelist
+  only:
+    - develop_appveyor
+
+clone_folder: c:\dev\openMVG
+
+install:
+  - git submodule update --init --recursive
+
+environment:
+  matrix:
+    - GENERATOR: "Visual Studio 14 2015 Win64"
+    - GENERATOR: "Visual Studio 14 2015"
+
+build_script:
+  - cd c:\dev\openMVG
+  - md openMVG_build
+  - cd openMVG_build
+  - cmake -G"%GENERATOR%" -DOpenMVG_BUILD_EXAMPLES=OFF ../src/
+  - cmake --build . --config Debug
+
+build:
+  parallel: true
+  verbosity: minimal
+
