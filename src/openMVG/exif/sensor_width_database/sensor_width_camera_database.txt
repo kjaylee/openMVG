@@ -3427,3 +3427,4 @@ Yakumo;Yakumo Mega Image 45;7.11
 Yakumo;Yakumo Mega Image 34;5.33
 Yakumo;Yakumo Mega Image IV;7.11
 Yakumo;Yakumo Mega Image II;7.11
+Apple;iPhone 5s;4.80
